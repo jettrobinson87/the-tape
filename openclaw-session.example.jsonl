@@ -1,0 +1,5 @@
+{"type": "session", "timestamp": "2026-02-01T10:00:00Z", "sessionKey": "main", "agent": {"name": "ExampleAgent", "version": "0.0"}}
+{"type": "message", "timestamp": "2026-02-01T10:00:02Z", "message": {"role": "user", "content": [{"type": "text", "text": "Write a tiny hello world script and run it."}]}}
+{"type": "message", "timestamp": "2026-02-01T10:00:05Z", "message": {"role": "assistant", "content": [{"type": "thinking", "text": "I'll create a small script and execute it."}, {"type": "toolCall", "name": "exec", "args": {"cmd": "python -c \"print('hello world')\""}}]}}
+{"type": "message", "timestamp": "2026-02-01T10:00:06Z", "message": {"role": "toolResult", "content": [{"type": "text", "text": "hello world\n"}]}}
+{"type": "message", "timestamp": "2026-02-01T10:00:07Z", "message": {"role": "assistant", "content": [{"type": "text", "text": "Done — the script printed 'hello world'."}]}}

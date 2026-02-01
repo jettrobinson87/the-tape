@@ -1,0 +1,2287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Tape — Link to the tape or it didn't happen</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --neon-green: #00ff88;
+            --neon-pink: #ff0088;
+            --neon-blue: #00d4ff;
+            --neon-orange: #ff6600;
+            --text-primary: #e8e8f0;
+            --text-muted: #6b6b80;
+            --border-subtle: #1e1e2a;
+            --success: #00ff88;
+            --error: #ff3366;
+            --warning: #ffaa00;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Scanline overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.1) 2px,
+                rgba(0, 0, 0, 0.1) 4px
+            );
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Noise texture */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 9998;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header */
+        header {
+            padding: 24px 0;
+            border-bottom: 1px solid var(--border-subtle);
+            position: sticky;
+            top: 0;
+            background: rgba(10, 10, 15, 0.9);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Space Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 26px;
+            background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));
+            border-radius: 4px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-icon::before {
+            content: '';
+            width: 60%;
+            height: 3px;
+            background: var(--bg-dark);
+            border-radius: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--neon-green);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--neon-green);
+            color: var(--bg-dark);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 100px 0 80px;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 255, 136, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            color: var(--neon-green);
+            margin-bottom: 32px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .hero-badge::before {
+            content: '●';
+            font-size: 0.6rem;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--neon-green) 50%, var(--neon-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-tagline {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.3rem;
+            color: var(--text-muted);
+            margin-bottom: 48px;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-tagline span {
+            color: var(--neon-pink);
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Drop Zone */
+        .drop-zone-section {
+            padding: 60px 0;
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--border-subtle);
+            border-radius: 16px;
+            padding: 60px 40px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            background: rgba(18, 18, 26, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--neon-green);
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .drop-zone.dragover::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(45deg, transparent 40%, rgba(0, 255, 136, 0.1) 50%, transparent 60%);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .drop-zone-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: var(--bg-dark);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .drop-zone h3 {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+
+        .drop-zone p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .drop-zone input {
+            display: none;
+        }
+
+        /* Featured Tapes */
+        .featured-section {
+            padding: 80px 0;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .section-subtitle {
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        .tape-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 24px;
+        }
+
+        .tape-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-subtle);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .tape-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--neon-green);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--neon-green);
+        }
+
+        .tape-preview {
+            height: 180px;
+            background: var(--bg-dark);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tape-preview-content {
+            padding: 16px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            line-height: 1.6;
+            color: var(--neon-green);
+            opacity: 0.8;
+        }
+
+        .tape-preview::after {
+            content: '▶';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 255, 136, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--bg-dark);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .tape-card:hover .tape-preview::after {
+            opacity: 1;
+        }
+
+        .tape-info {
+            padding: 20px;
+        }
+
+        .tape-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tape-tag {
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .tape-tag.speedrun {
+            background: rgba(0, 212, 255, 0.2);
+            color: var(--neon-blue);
+        }
+
+        .tape-tag.fail {
+            background: rgba(255, 51, 102, 0.2);
+            color: var(--error);
+        }
+
+        .tape-tag.win {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--success);
+        }
+
+        .tape-tag.debug {
+            background: rgba(255, 170, 0, 0.2);
+            color: var(--warning);
+        }
+
+        .tape-meta {
+            display: flex;
+            gap: 16px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .tape-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Player Section */
+        .player-section {
+            padding: 60px 0;
+            display: none;
+        }
+
+        .player-section.active {
+            display: block;
+        }
+
+        .player-container {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border-subtle);
+            overflow: hidden;
+        }
+
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .player-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .player-title h2 {
+            font-size: 1.2rem;
+        }
+
+        .player-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .player-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 24px;
+            background: var(--bg-dark);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .control-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 1px solid var(--border-subtle);
+            background: transparent;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover {
+            background: var(--neon-green);
+            color: var(--bg-dark);
+            border-color: var(--neon-green);
+        }
+
+        .control-btn.playing {
+            background: var(--neon-green);
+            color: var(--bg-dark);
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 6px;
+            background: var(--border-subtle);
+            border-radius: 3px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--neon-green);
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .time-display {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            min-width: 100px;
+            text-align: right;
+        }
+
+        .step-counter {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--neon-green);
+            background: rgba(0, 255, 136, 0.1);
+            padding: 4px 10px;
+            border-radius: 4px;
+            min-width: 70px;
+            text-align: center;
+        }
+
+        .speed-control {
+            padding: 6px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .timeline {
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .timeline::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .timeline::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        .timeline::-webkit-scrollbar-thumb {
+            background: var(--border-subtle);
+            border-radius: 4px;
+        }
+
+        .step {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            background: var(--bg-dark);
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .step.active {
+            opacity: 1;
+            border-color: var(--neon-green);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.1);
+        }
+
+        .step.completed {
+            opacity: 0.8;
+        }
+
+        .step-indicator {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.2rem;
+        }
+
+        .step-indicator.thought {
+            background: rgba(0, 212, 255, 0.2);
+        }
+
+        .step-indicator.action {
+            background: rgba(0, 255, 136, 0.2);
+        }
+
+        .step-indicator.error {
+            background: rgba(255, 51, 102, 0.2);
+        }
+
+        .step-indicator.result {
+            background: rgba(255, 170, 0, 0.2);
+        }
+
+        .step-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .step-type {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .step-type.thought { color: var(--neon-blue); }
+        .step-type.user { color: var(--neon-purple); }
+        .step-type.action { color: var(--neon-green); }
+        .step-type.error { color: var(--error); }
+        .step-type.result { color: var(--warning); }
+
+        .step-time {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .step-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .step-code {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            overflow-x: auto;
+            border-left: 3px solid var(--neon-green);
+        }
+
+        .step-code.error-code {
+            border-left-color: var(--error);
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 24px;
+            padding: 16px 24px;
+            background: var(--bg-dark);
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        .stat-icon.duration { background: rgba(0, 212, 255, 0.2); }
+        .stat-icon.steps { background: rgba(0, 255, 136, 0.2); }
+        .stat-icon.tools { background: rgba(255, 170, 0, 0.2); }
+        .stat-icon.errors { background: rgba(255, 51, 102, 0.2); }
+
+        .stat-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        /* How it Works */
+        .how-section {
+            padding: 100px 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(0, 255, 136, 0.02) 50%, transparent 100%);
+        }
+
+        .how-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .how-card {
+            text-align: center;
+            padding: 40px 24px;
+        }
+
+        .how-number {
+            font-family: 'Space Mono', monospace;
+            font-size: 4rem;
+            font-weight: 700;
+            color: var(--neon-green);
+            opacity: 0.3;
+            line-height: 1;
+            margin-bottom: 24px;
+        }
+
+        .how-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+        }
+
+        .how-card p {
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 100px 0;
+            text-align: center;
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 212, 255, 0.1) 100%);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 24px;
+            padding: 60px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(0, 255, 136, 0.1) 0%, transparent 50%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .cta-box > * {
+            position: relative;
+        }
+
+        .cta-box h2 {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+
+        .cta-box p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 32px;
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 0;
+            border-top: 1px solid var(--border-subtle);
+            text-align: center;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--neon-green);
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .how-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .tape-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-bar {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+    
+        @media (prefers-reduced-motion: reduce) {
+            .scanline { animation: none !important; }
+            .glitch { animation: none !important; }
+            .tape-card:hover { transform: none !important; }
+        }
+
+</style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo">
+                    <div class="logo-icon"></div>
+                    THE TAPE
+                </a>
+                <nav class="nav-links">
+                    <a href="#featured">Featured</a>
+                    <a href="#how">How it Works</a>
+                    <a href="https://github.com/the-tape-dev/the-tape" target="_blank">GitHub</a>
+                    <button class="btn btn-primary" onclick="scrollToUpload()">Upload Tape</button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <div class="hero-badge">REC • LIVE</div>
+                <h1 class="fade-in">Watch AI Work.</h1>
+                <p class="hero-tagline fade-in delay-1">
+                    <span>Link to the tape</span> or it didn't happen.
+                </p>
+                <div class="hero-actions fade-in delay-2">
+                    <button class="btn btn-primary" onclick="scrollToUpload()">Upload Your Tape</button>
+                    <button class="btn btn-ghost" onclick="loadDemoTape()">Watch Demo</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="drop-zone-section" id="upload">
+            <div class="container">
+                <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                    <div class="drop-zone-icon">📼</div>
+                    <h3>Drop your Tape here</h3>
+                    <p>or click to browse • Supports .tape.json + OpenClaw session .jsonl</p>
+                    <input type="file" id="fileInput" accept=".json,.jsonl" onchange="handleFileSelect(event)">
+                </div>
+            </div>
+        </section>
+
+        <section class="player-section" id="player">
+            <div class="container">
+                <div class="player-container">
+                    <div class="player-header">
+                        <div class="player-title">
+                            <span class="tape-tag win" id="playerTag">WIN</span>
+                            <h2 id="playerTitle">Agent Run</h2>
+                        </div>
+                        <div class="player-actions">
+                            <button class="btn btn-ghost" id="redactionBtn" onclick="toggleRedaction()">🫥 Redaction: ON</button>
+                            <button class="btn btn-ghost" onclick="copyShareLink()">📎 Copy Link</button>
+                            <button class="btn btn-primary" onclick="publishTape()">⬆️ Publish</button>
+                        </div>
+                    </div>
+                    <div class="player-controls">
+                        <button class="control-btn" id="playBtn" onclick="togglePlay()">▶</button>
+                        <button class="control-btn" onclick="skipStep(-1)">⏮</button>
+                        <button class="control-btn" onclick="skipStep(1)">⏭</button>
+                        <div class="progress-bar" onclick="seekProgress(event)">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+                        <div class="step-counter" id="currentStep">0 / 0</div>
+                        <select class="speed-control" id="speedControl" onchange="changeSpeed()">
+                            <option value="0.5">0.5x</option>
+                            <option value="1" selected>1x</option>
+                            <option value="2">2x</option>
+                            <option value="4">4x</option>
+                        </select>
+                    </div>
+                    <div class="timeline" id="timeline">
+                        <!-- Steps will be injected here -->
+                    </div>
+                    <div class="stats-bar" id="statsBar">
+                        <div class="stat">
+                            <div class="stat-icon duration">⏱</div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="statDuration">0s</span>
+                                <span class="stat-label">Duration</span>
+                            </div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-icon steps">📝</div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="statSteps">0</span>
+                                <span class="stat-label">Steps</span>
+                            </div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-icon tools">🔧</div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="statTools">0</span>
+                                <span class="stat-label">Tools Used</span>
+                            </div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-icon errors">⚠</div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="statErrors">0</span>
+                                <span class="stat-label">Errors</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="featured-section" id="featured">
+            <div class="container">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Featured Tapes</h2>
+                        <p class="section-subtitle">Watch agents in action</p>
+                    </div>
+                    <button class="btn btn-ghost">View All →</button>
+                </div>
+                <div class="tape-grid" id="tapeGrid">
+                    <!-- Tape cards will be injected here -->
+                </div>
+            </div>
+        </section>
+
+        <section class="how-section" id="how">
+            <div class="container">
+                <div style="text-align: center;">
+                    <h2 class="section-title">How It Works</h2>
+                    <p class="section-subtitle">Record, share, and verify agent runs in 3 steps</p>
+                </div>
+                <div class="how-grid">
+                    <div class="how-card">
+                        <div class="how-number">01</div>
+                        <h3>Record</h3>
+                        <p>Install the Tape hook for auto-export on /stop, or drag any OpenClaw .jsonl transcript directly into the player.</p>
+                    </div>
+                    <div class="how-card">
+                        <div class="how-number">02</div>
+                        <h3>Redact</h3>
+                        <p>Auto-detects API keys, tokens, emails, and PII. Toggle redaction on/off before sharing. Review is always recommended.</p>
+                    </div>
+                    <div class="how-card">
+                        <div class="how-number">03</div>
+                        <h3>Share</h3>
+                        <p>Copy a shareable link (small tapes) or download a .tape.json file to host anywhere. Prove your agent did the work.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta-section">
+            <div class="container">
+                <div class="cta-box">
+                    <h2>Link to the tape.</h2>
+                    <p>Or it didn't happen. Join the movement.</p>
+                    <button class="btn btn-primary" onclick="scrollToUpload()">Upload Your First Tape</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>Built for the agent age • <a href="#how">Install the Hook</a> • <a href="https://github.com/anthropics/openclaw" target="_blank">OpenClaw ↗</a></p>
+        </div>
+    </footer>
+
+    <script>
+// The Tape Player — hardened MVP
+// - Supports .tape.json (The Tape v1 + legacy) and OpenClaw session .jsonl
+// - Safe rendering (XSS-hardened)
+// - Client-side redaction (default ON)
+// - Shareable URLs for small tapes (hash-embedded)
+// - "Publish" downloads a redacted .tape.json
+
+let currentTape = null;          // normalized tape object
+let currentStepIndex = 0;
+let isPlaying = false;
+let playbackTimer = null;
+let playbackSpeed = 1;
+let redactionEnabled = true;
+let autoScrollEnabled = true;
+
+const MAX_SHARE_URL_CHARS = 10000; // conservative limit for browser/social app compatibility
+
+// Basic built-in demo tape (legacy schema) — used for "Watch Demo"
+const demoTape = {
+    title: "Agent Negotiates Refund (Demo)",
+    tag: "win",
+    duration: "1:23",
+    steps: [
+        {
+            type: "thought",
+            time: "0:05",
+            text: "I need to gather account details and identify the billing discrepancy. Let's approach this systematically and politely.",
+            code: null,
+        },
+        {
+            type: "action",
+            time: "0:13",
+            text: "Opened Comcast billing portal and navigated to recent charges",
+            code: "tool: browser\nurl: https://billing.example.com\naction: navigate + locate recent charges",
+        },
+        {
+            type: "thought",
+            time: "0:21",
+            text: "The overcharge appears to be from a pro-rated service fee that shouldn't apply. I'll prepare evidence and contact support.",
+            code: null,
+        },
+        {
+            type: "action",
+            time: "0:35",
+            text: "Started support chat and presented charge comparison",
+            code: "tool: browser\naction: start_chat\nmessage: compare last month vs this month and highlight duplicate fee",
+        },
+        {
+            type: "result",
+            time: "1:02",
+            text: "Support acknowledged the error and issued a $47 credit. Case closed.",
+            code: "Outcome: CREDIT ISSUED\nAmount: $47\nReference: CASE-REDACTED",
+        },
+    ],
+};
+
+// Featured tapes for the homepage (static, safe)
+const featuredTapes = [
+    {
+        title: "Flappy Bird Speedrun",
+        tag: "speedrun",
+        duration: "0:47",
+        preview: "Agent builds a Flappy Bird clone in 47 seconds. Compiler errors. Quick fixes. Ship.",
+    },
+    {
+        title: "Kubernetes Crash Debug",
+        tag: "debug",
+        duration: "2:18",
+        preview: "Watch the agent trace a failing pod, read logs, and patch a config issue.",
+    },
+    {
+        title: "Comcast Refund Battle",
+        tag: "win",
+        duration: "1:23",
+        preview: "Agent navigates billing UI, negotiates politely, and wins a credit.",
+    },
+    {
+        title: "Model Hallucination Fail",
+        tag: "fail",
+        duration: "0:58",
+        preview: "Agent confidently does the wrong thing. Replay shows exactly where it drifted.",
+    },
+];
+
+function $(id) {
+    return document.getElementById(id);
+}
+
+function status(msg, kind = "info") {
+    const el = $("systemStatus");
+    if (!el) return;
+    const prefix = kind === "error" ? "⚠️ " : kind === "ok" ? "✅ " : "📼 ";
+    el.textContent = `${prefix}${msg}`;
+}
+
+function escapeHtml(unsafe) {
+    const div = document.createElement("div");
+    div.textContent = unsafe == null ? "" : String(unsafe);
+    return div.innerHTML;
+}
+
+function clamp(n, min, max) {
+    return Math.max(min, Math.min(max, n));
+}
+
+function formatTime(seconds) {
+    const s = Math.max(0, Math.floor(Number(seconds) || 0));
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+    return `${m}:${String(sec).padStart(2, "0")}`;
+}
+
+function parseTimeToSeconds(timeStr) {
+    if (!timeStr) return null;
+    const t = String(timeStr).trim();
+    // Accept "m:ss" or "h:mm:ss" or "ss"
+    const parts = t.split(":").map(p => p.trim()).filter(Boolean);
+    if (parts.length === 1) {
+        const v = Number(parts[0]);
+        return Number.isFinite(v) ? v : null;
+    }
+    if (parts.length === 2) {
+        const m = Number(parts[0]);
+        const s = Number(parts[1]);
+        if (!Number.isFinite(m) || !Number.isFinite(s)) return null;
+        return m * 60 + s;
+    }
+    if (parts.length === 3) {
+        const h = Number(parts[0]);
+        const m = Number(parts[1]);
+        const s = Number(parts[2]);
+        if (!Number.isFinite(h) || !Number.isFinite(m) || !Number.isFinite(s)) return null;
+        return h * 3600 + m * 60 + s;
+    }
+    return null;
+}
+
+function safeJson(value, maxLen = 6000) {
+    if (value == null) return "";
+    let str = "";
+    try {
+        if (typeof value === "string") {
+            str = value;
+        } else {
+            str = JSON.stringify(value, null, 2);
+        }
+    } catch (e) {
+        str = String(value);
+    }
+    if (str.length > maxLen) {
+        return str.slice(0, maxLen) + "\n…(truncated)…";
+    }
+    return str;
+}
+
+// --- Redaction ---
+const REDACTION_RULES = [
+    // Common API keys / tokens
+    { name: "OpenAI key", re: /\bsk-[A-Za-z0-9]{20,}\b/g, rep: "sk-REDACTED" },
+    { name: "Anthropic key", re: /\bsk-ant-[A-Za-z0-9\-]{20,}\b/g, rep: "sk-ant-REDACTED" },
+    { name: "Google API key", re: /\bAIza[0-9A-Za-z\-_]{35}\b/g, rep: "AIzaREDACTED" },
+    { name: "GitHub token", re: /\bgh[pousr]_[A-Za-z0-9]{20,}\b/g, rep: "gh_REDACTED" },
+    { name: "Slack token", re: /\bxox[baprs]-[0-9A-Za-z-]{10,}\b/g, rep: "xox-REDACTED" },
+    { name: "Bearer token", re: /\bBearer\s+[A-Za-z0-9\-\._~\+/]+=*\b/g, rep: "Bearer REDACTED" },
+    { name: "AWS access key", re: /\bAKIA[0-9A-Z]{16}\b/g, rep: "AKIAREDACTED" },
+    { name: "AWS secret key", re: /\b[A-Za-z0-9/+=]{40}\b/g, rep: "[aws-secret-redacted]" },
+    // Private keys (PEM blocks) - must be a single rule to catch the whole block
+    { name: "PEM block", re: /-----BEGIN [A-Z0-9 ]+-----[\s\S]*?-----END [A-Z0-9 ]+-----/g, rep: "[pem-block-redacted]" },
+    // JWTs (three base64 segments separated by dots)
+    { name: "JWT token", re: /\beyJ[A-Za-z0-9_-]*\.eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]+\b/g, rep: "[jwt-redacted]" },
+    // Database connection strings
+    { name: "DB connection", re: /(postgres|mysql|mongodb|redis):\/\/[^\s"']+/gi, rep: "[db-connection-redacted]" },
+    // PII
+    { name: "Email", re: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, rep: "[email-redacted]" },
+    { name: "Phone (loose)", re: /\b(\+?\d[\d\s().-]{7,}\d)\b/g, rep: "[phone-redacted]" },
+    // IP addresses (private ranges are less sensitive but still worth flagging)
+    { name: "IP address", re: /\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, rep: "[ip-redacted]" },
+];
+
+function redactString(str) {
+    if (!redactionEnabled) return str;
+    let out = String(str ?? "");
+    for (const rule of REDACTION_RULES) {
+        out = out.replace(rule.re, rule.rep);
+    }
+    return out;
+}
+
+// Always redact - used for exports/shares (toggle only affects display)
+function forceRedactString(str) {
+    let out = String(str ?? "");
+    for (const rule of REDACTION_RULES) {
+        out = out.replace(rule.re, rule.rep);
+    }
+    return out;
+}
+
+function redactTapeInPlace(tape) {
+    // Mutates a clone (caller should clone first)
+    tape.title = redactString(tape.title);
+    if (Array.isArray(tape.steps)) {
+        for (const s of tape.steps) {
+            s.text = redactString(s.text);
+            s.code = redactString(s.code);
+            if (s.tool) s.tool = redactString(s.tool);
+        }
+    }
+    return tape;
+}
+
+function clone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+}
+
+// --- Format detection + normalization ---
+const ALLOWED_TAGS = new Set(["win", "fail", "debug", "speedrun"]);
+const ALLOWED_TYPES = new Set(["user", "thought", "action", "result", "error"]);
+
+function sanitizeTag(tag) {
+    const t = String(tag || "").toLowerCase().trim();
+    if (ALLOWED_TAGS.has(t)) return t;
+    // loose mapping
+    if (t.includes("speed")) return "speedrun";
+    if (t.includes("fail") || t.includes("error")) return "fail";
+    if (t.includes("win") || t.includes("success")) return "win";
+    return "debug";
+}
+
+function sanitizeType(type) {
+    const t = String(type || "").toLowerCase().trim();
+    if (ALLOWED_TYPES.has(t)) return t;
+    if (t === "tool") return "action";
+    if (t === "assistant") return "result";
+    return "result";
+}
+
+function normalizeFromLegacy(obj, filename) {
+    const title = String(obj.title || filename || "Untitled Tape");
+    const tag = sanitizeTag(obj.tag || "debug");
+    const stepsRaw = Array.isArray(obj.steps) ? obj.steps : [];
+    const steps = stepsRaw.map((s, i) => {
+        const t = parseTimeToSeconds(s.time);
+        return {
+            id: s.id || `step_${i + 1}`,
+            type: sanitizeType(s.type),
+            t: Number.isFinite(t) ? t : i,
+            text: String(s.text || ""),
+            code: s.code == null ? "" : String(s.code),
+            tool: null,
+        };
+    });
+    const durationSeconds = parseTimeToSeconds(obj.duration) ?? (steps.length ? steps[steps.length - 1].t : 0);
+    return {
+        version: "normalized@1",
+        sourceFormat: "legacy",
+        title,
+        tag,
+        recordedAt: null,
+        durationSeconds: Number.isFinite(durationSeconds) ? durationSeconds : 0,
+        steps,
+    };
+}
+
+function normalizeFromTapeV1(obj, filename) {
+    const meta = obj.metadata || {};
+    const title = String(meta.title || filename || "Untitled Tape");
+    const tags = Array.isArray(meta.tags) ? meta.tags.map(t => String(t).toLowerCase()) : [];
+    let tag = "debug";
+    if (tags.includes("speedrun")) tag = "speedrun";
+    else if (tags.includes("fail") || tags.includes("error")) tag = "fail";
+    else if (tags.includes("win") || tags.includes("success")) tag = "win";
+    else if (tags.includes("debug")) tag = "debug";
+
+    tag = sanitizeTag(tag);
+
+    const stepsRaw = Array.isArray(obj.steps) ? obj.steps : [];
+    const steps = stepsRaw.map((s, i) => {
+        const type = sanitizeType(s.type);
+        const t = Number.isFinite(s.elapsed_seconds) ? Number(s.elapsed_seconds) : i;
+        const content = s.content || {};
+        let text = "";
+        let code = "";
+        let tool = null;
+
+        if (type === "thought") {
+            text = String(content.text || content.thought || "");
+        } else if (type === "user") {
+            text = String(content.text || "");
+        } else if (type === "action") {
+            tool = content.tool ? String(content.tool) : null;
+            const desc = content.description ? String(content.description) : "Action";
+            text = tool ? `${tool} — ${desc}` : desc;
+
+            const parts = [];
+            if (content.file_path) parts.push(`file: ${content.file_path}`);
+            if (content.url) parts.push(`url: ${content.url}`);
+            if (content.selector) parts.push(`selector: ${content.selector}`);
+            if (content.input != null) parts.push(`input:\n${safeJson(content.input)}`);
+            if (content.output != null) parts.push(`output:\n${safeJson(content.output)}`);
+            if (content.preview) parts.push(`preview:\n${safeJson(content.preview, 2000)}`);
+            code = parts.join("\n\n");
+        } else if (type === "error") {
+            text = String(content.message || content.description || "Error");
+            code = safeJson(content.stack_preview || content.details || content, 4000);
+        } else {
+            // result (or fallback)
+            text = String(content.description || content.text || "Result");
+            if (content.details) code = safeJson(content.details, 5000);
+            else if (content.artifacts) code = safeJson(content.artifacts, 5000);
+            else if (content.output != null) code = safeJson(content.output, 5000);
+            else code = safeJson(content, 5000);
+        }
+
+        return {
+            id: s.id || `step_${i + 1}`,
+            type,
+            t,
+            text,
+            code,
+            tool,
+        };
+    });
+
+    // Prefer metadata.duration_seconds, else compute from steps
+    let durationSeconds = Number.isFinite(meta.duration_seconds) ? Number(meta.duration_seconds) : null;
+    if (durationSeconds == null && steps.length) {
+        durationSeconds = steps[steps.length - 1].t;
+    }
+    if (!Number.isFinite(durationSeconds)) durationSeconds = 0;
+
+    return {
+        version: String(obj.version || "1.0"),
+        sourceFormat: "tape-v1",
+        title,
+        tag,
+        recordedAt: meta.recorded_at || null,
+        durationSeconds,
+        steps,
+    };
+}
+
+function normalizeFromOpenClaw(records, filename) {
+    // records: array of JSON objects (from .jsonl)
+    const sessionMeta = records.find(r => r && r.type === "session") || null;
+    const messageRecords = records.filter(r => r && (r.type === "message" || r.message));
+
+    if (!messageRecords.length) {
+        throw new Error("No message records found in JSONL.");
+    }
+
+    // Determine start timestamp
+    const parseTs = (v) => {
+        if (!v) return null;
+        const d = new Date(v);
+        return Number.isFinite(d.getTime()) ? d : null;
+    };
+
+    let startDate = parseTs(messageRecords[0].timestamp) || parseTs(sessionMeta && sessionMeta.timestamp);
+    if (!startDate) startDate = new Date();
+
+    const steps = [];
+    const toolStack = []; // holds indexes of recent action steps (for attaching tool results)
+
+    const pushStep = (step) => {
+        // enforce ordering
+        steps.push(step);
+    };
+
+    for (const rec of messageRecords) {
+        const role = rec.message?.role || rec.role || "assistant";
+        const ts = parseTs(rec.timestamp) || startDate;
+        const t = (ts.getTime() - startDate.getTime()) / 1000;
+        const contentArr = Array.isArray(rec.message?.content) ? rec.message.content : (Array.isArray(rec.content) ? rec.content : []);
+
+        if (role === "user") {
+            for (const c of contentArr) {
+                if (c && c.type === "text" && c.text) {
+                    pushStep({
+                        id: `user_${steps.length + 1}`,
+                        type: "user",
+                        t,
+                        text: String(c.text),
+                        code: "",
+                        tool: null,
+                    });
+                }
+            }
+            continue;
+        }
+
+        if (role === "assistant") {
+            for (const c of contentArr) {
+                if (!c || !c.type) continue;
+                if (c.type === "thinking" && (c.text || c.thinking)) {
+                    pushStep({
+                        id: `thought_${steps.length + 1}`,
+                        type: "thought",
+                        t,
+                        text: String(c.text || c.thinking),
+                        code: "",
+                        tool: null,
+                    });
+                } else if (c.type === "text" && c.text) {
+                    pushStep({
+                        id: `result_${steps.length + 1}`,
+                        type: "result",
+                        t,
+                        text: String(c.text),
+                        code: "",
+                        tool: null,
+                    });
+                } else if (c.type === "toolCall") {
+                    const toolName = String(c.name || c.tool || "tool");
+                    const args = c.args ?? c.arguments ?? c.params ?? c.input ?? null;
+                    const code = args == null ? "" : safeJson(args, 6000);
+
+                    const stepIndex = steps.length;
+                    pushStep({
+                        id: `action_${stepIndex + 1}`,
+                        type: "action",
+                        t,
+                        text: toolName,
+                        code: code,
+                        tool: toolName,
+                    });
+                    toolStack.push(stepIndex);
+                }
+            }
+            continue;
+        }
+
+        if (role === "toolResult") {
+            // best effort: attach to most recent toolCall (stack)
+            let payloadText = "";
+            let isErr = false;
+
+            if (contentArr.length) {
+                // Sometimes toolResult content blocks are {type:"text", text:"..."} or {type:"toolResult", ...}
+                const parts = [];
+                for (const c of contentArr) {
+                    if (!c) continue;
+                    if (c.type === "text" && c.text) parts.push(String(c.text));
+                    else parts.push(safeJson(c, 2000));
+                }
+                payloadText = parts.join("\n\n");
+            } else {
+                payloadText = safeJson(rec.message || rec, 4000);
+            }
+
+            // crude error detection
+            if ((rec.message && (rec.message.error || rec.message.isError)) || /error|exception|traceback/i.test(payloadText)) {
+                isErr = true;
+            }
+
+            const step = {
+                id: `toolResult_${steps.length + 1}`,
+                type: isErr ? "error" : "result",
+                t,
+                text: isErr ? "Tool error" : "Tool result",
+                code: payloadText,
+                tool: null,
+            };
+
+            // Attach to last action if possible
+            if (toolStack.length) {
+                const idx = toolStack.pop();
+                const actionStep = steps[idx];
+                if (actionStep && actionStep.type === "action") {
+                    const combined = [];
+                    if (actionStep.code) combined.push(`call:\n${actionStep.code}`);
+                    combined.push(isErr ? `error:\n${payloadText}` : `result:\n${payloadText}`);
+                    actionStep.code = combined.join("\n\n");
+                    // also keep a separate result step if it's an error
+                    if (isErr) pushStep(step);
+                } else {
+                    pushStep(step);
+                }
+            } else {
+                pushStep(step);
+            }
+            continue;
+        }
+
+        // fallback for unknown roles
+        if (contentArr.length) {
+            const combined = contentArr.map(c => (c && c.text) ? String(c.text) : safeJson(c, 1000)).join("\n\n");
+            pushStep({
+                id: `msg_${steps.length + 1}`,
+                type: "result",
+                t,
+                text: `${role}`,
+                code: combined,
+                tool: null,
+            });
+        }
+    }
+
+    // Title heuristic: first user line, else filename, else session key
+    let title = filename || (sessionMeta && (sessionMeta.sessionKey || sessionMeta.key)) || "OpenClaw Session";
+    const firstUser = steps.find(s => s.type === "user" && s.text);
+    if (firstUser && firstUser.text) {
+        title = firstUser.text.length > 64 ? firstUser.text.slice(0, 64) + "…" : firstUser.text;
+    }
+
+    const durationSeconds = steps.length ? Math.max(...steps.map(s => Number(s.t) || 0)) : 0;
+    return {
+        version: "openclaw@jsonl",
+        sourceFormat: "openclaw-jsonl",
+        title,
+        tag: "debug",
+        recordedAt: sessionMeta && sessionMeta.timestamp ? sessionMeta.timestamp : null,
+        durationSeconds,
+        steps,
+    };
+}
+
+function normalizeTape(objOrRecords, filename) {
+    // objOrRecords: JSON object OR array of JSONL records
+    if (Array.isArray(objOrRecords)) {
+        // Could be JSON array of transcript entries or JSONL records
+        const looksLikeJsonl = objOrRecords.some(r => r && (r.type === "session" || r.type === "message" || r.message));
+        if (looksLikeJsonl) {
+            return normalizeFromOpenClaw(objOrRecords, filename);
+        }
+    }
+
+    const obj = objOrRecords;
+
+    // OpenClaw sessions_history output might be { messages: [...] }
+    if (obj && Array.isArray(obj.messages)) {
+        return normalizeFromOpenClaw(obj.messages, filename);
+    }
+
+    // Tape v1 format
+    if (obj && typeof obj === "object" && obj.metadata && Array.isArray(obj.steps)) {
+        return normalizeFromTapeV1(obj, filename);
+    }
+
+    // Legacy demo format
+    if (obj && typeof obj === "object" && obj.title && Array.isArray(obj.steps)) {
+        return normalizeFromLegacy(obj, filename);
+    }
+
+    throw new Error("Unrecognized tape format.");
+}
+
+function parseTapeText(text, filename) {
+    const trimmed = (text || "").trim();
+    if (!trimmed) throw new Error("Empty file.");
+
+    // Attempt JSON parse first
+    try {
+        const obj = JSON.parse(trimmed);
+        return normalizeTape(obj, filename);
+    } catch (e) {
+        // Attempt JSONL
+    }
+
+    const lines = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (!lines.length) throw new Error("Empty file.");
+
+    // Heuristic: JSONL if many lines start with "{"
+    if (lines.length >= 2 && lines.every(l => l.startsWith("{"))) {
+        const records = [];
+        for (const line of lines) {
+            try {
+                records.push(JSON.parse(line));
+            } catch (err) {
+                throw new Error("Failed to parse JSONL. One of the lines is not valid JSON.");
+            }
+        }
+        return normalizeFromOpenClaw(records, filename);
+    }
+
+    throw new Error("Unsupported file format (expected JSON or JSONL).");
+}
+
+// --- Rendering ---
+function tagLabel(tag) {
+    const t = sanitizeTag(tag);
+    if (t === "win") return "WIN";
+    if (t === "fail") return "FAIL";
+    if (t === "speedrun") return "SPEEDRUN";
+    return "DEBUG";
+}
+
+function typeLabel(type) {
+    const t = sanitizeType(type);
+    if (t === "user") return "USER";
+    if (t === "thought") return "THOUGHT";
+    if (t === "action") return "ACTION";
+    if (t === "error") return "ERROR";
+    return "RESULT";
+}
+
+function typeIcon(type) {
+    const t = sanitizeType(type);
+    if (t === "user") return "🧑";
+    if (t === "thought") return "💭";
+    if (t === "action") return "🖱️";
+    if (t === "error") return "⚠️";
+    return "✅";
+}
+
+function getDisplayStep(step) {
+    // Apply redaction at display time; do not mutate source
+    const text = redactString(step.text || "");
+    const code = redactString(step.code || "");
+    const tool = redactString(step.tool || "");
+    return { ...step, text, code, tool };
+}
+
+function renderFeaturedTapes() {
+    const tapeGrid = $("tapeGrid");
+    if (!tapeGrid) return;
+
+    tapeGrid.innerHTML = featuredTapes.map((tape, index) => `
+        <div class="tape-card" onclick="loadFeaturedTape(${index})">
+            <div class="tape-preview">
+                <div class="tape-preview-content">${escapeHtml(tape.preview)}</div>
+            </div>
+            <div class="tape-info">
+                <div class="tape-title">
+                    <span class="tape-tag ${escapeHtml(sanitizeTag(tape.tag))}">${escapeHtml(tagLabel(tape.tag))}</span>
+                    ${escapeHtml(tape.title)}
+                </div>
+                <div class="tape-meta">
+                    <span>⏱ ${escapeHtml(tape.duration)}</span>
+                    <span>▶ Watch</span>
+                </div>
+            </div>
+        </div>
+    `).join("");
+}
+
+function renderTimeline() {
+    const timeline = $("timeline");
+    if (!timeline || !currentTape) return;
+
+    timeline.innerHTML = currentTape.steps.map((rawStep, index) => {
+        const step = getDisplayStep(rawStep);
+        const isActive = index === currentStepIndex;
+        const isCompleted = index < currentStepIndex;
+        const t = Number(step.t) || 0;
+
+        const codeBlock = step.code
+            ? `<div class="step-code ${step.type === 'error' ? 'error-code' : ''}">${escapeHtml(step.code)}</div>`
+            : "";
+
+        return `
+            <div class="step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" onclick="jumpToStep(${index})">
+                <div class="step-indicator ${escapeHtml(step.type)}">${escapeHtml(typeIcon(step.type))}</div>
+                <div class="step-content">
+                    <div class="step-header">
+                        <span class="step-type ${escapeHtml(step.type)}">${escapeHtml(typeLabel(step.type))}</span>
+                        <span class="step-time">${escapeHtml(formatTime(t))}</span>
+                    </div>
+                    <div class="step-text">${escapeHtml(step.text)}</div>
+                    ${codeBlock}
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+function updateStats() {
+    if (!currentTape) return;
+
+    // Duration
+    $("statDuration").textContent = formatTime(currentTape.durationSeconds);
+
+    // Total steps
+    $("statSteps").textContent = String(currentTape.steps.length);
+
+    // Tools used (unique)
+    const tools = new Set();
+    for (const s of currentTape.steps) {
+        if (s.type === "action" && s.tool) tools.add(String(s.tool));
+    }
+    $("statTools").textContent = String(tools.size);
+
+    // Errors
+    const errors = currentTape.steps.filter(s => s.type === "error").length;
+    $("statErrors").textContent = String(errors);
+
+    // time display
+    const curT = Number(currentTape.steps[currentStepIndex]?.t) || 0;
+    $("timeDisplay").textContent = `${formatTime(curT)} / ${formatTime(currentTape.durationSeconds)}`;
+}
+
+function updateProgress() {
+    if (!currentTape) return;
+    const progressFill = $("progressFill");
+    const currentStep = $("currentStep");
+    if (!progressFill || !currentStep) return;
+
+    const totalSteps = currentTape.steps.length;
+    currentStep.textContent = `${currentStepIndex + 1} / ${totalSteps}`;
+
+    const curT = Number(currentTape.steps[currentStepIndex]?.t) || 0;
+    const ratio = currentTape.durationSeconds > 0 ? (curT / currentTape.durationSeconds) : 0;
+    progressFill.style.width = `${clamp(ratio * 100, 0, 100)}%`;
+}
+
+function updatePlayerHeader() {
+    if (!currentTape) return;
+    $("playerTitle").textContent = redactString(currentTape.title);
+
+    const tagEl = $("playerTag") || document.querySelector(".tape-tag");
+    if (tagEl) {
+        const tag = sanitizeTag(currentTape.tag);
+        tagEl.className = `tape-tag ${tag}`;
+        tagEl.textContent = tagLabel(tag);
+    }
+}
+
+function showPlayer() {
+    const el = $("player");
+    if (!el) return;
+    el.classList.add("active");
+    setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 200);
+}
+
+function loadTape(tape) {
+    // Normalize step times (ensure non-decreasing)
+    tape.steps = (tape.steps || []).map(s => ({ ...s, type: sanitizeType(s.type), t: Number(s.t) || 0 }))
+        .sort((a, b) => a.t - b.t);
+
+    // Compute duration if missing/invalid
+    if (!Number.isFinite(tape.durationSeconds) || tape.durationSeconds <= 0) {
+        tape.durationSeconds = tape.steps.length ? tape.steps[tape.steps.length - 1].t : 0;
+    }
+
+    currentTape = tape;
+    currentStepIndex = 0;
+    stopPlayback();
+
+    updatePlayerHeader();
+    updateStats();
+    updateProgress();
+    renderTimeline();
+
+    showPlayer();
+    status(`Loaded: ${tape.title}`, "ok");
+}
+
+function loadDemoTape() {
+    try {
+        const tape = normalizeTape(demoTape, "demo.tape.json");
+        loadTape(tape);
+    } catch (e) {
+        status("Failed to load demo tape.", "error");
+        console.error(e);
+    }
+}
+
+async function loadFeaturedTape(index) {
+    // If served via HTTP (recommended), we can load real example tapes from /examples.
+    // If opened as file://, fetch may fail — we fall back to the demo tape.
+
+    if (index === 0) {
+        // Flappy Bird example (real tape file)
+        try {
+            const res = await fetch("./examples/flappy-bird-speedrun.tape.json", { cache: "no-store" });
+            if (res.ok) {
+                const obj = await res.json();
+                const tape = normalizeTape(obj, "flappy-bird-speedrun.tape.json");
+                loadTape(tape);
+                return;
+            }
+        } catch (e) {
+            // ignore
+        }
+        status("Tip: serve this folder (python -m http.server) or drag examples/flappy-bird-speedrun.tape.json into the page. Demo loaded instead.", "info");
+        loadDemoTape();
+        return;
+    }
+
+    if (index === 2) {
+        loadDemoTape();
+        return;
+    }
+
+    // synth quick pseudo tape for other featured items
+    const f = featuredTapes[index];
+    const synthetic = normalizeFromLegacy({
+        title: f.title,
+        tag: f.tag,
+        duration: f.duration,
+        steps: [
+            { type: "thought", time: "0:03", text: "Replaying run…", code: "" },
+            { type: "action", time: "0:10", text: "Agent uses tools", code: "tool: (various)\n…" },
+            { type: f.tag === "fail" ? "error" : "result", time: "0:30", text: "Outcome snapshot", code: f.preview },
+        ],
+    }, f.title);
+    loadTape(synthetic);
+}
+
+
+function jumpToStep(index) {
+    if (!currentTape) return;
+    currentStepIndex = clamp(index, 0, currentTape.steps.length - 1);
+    renderTimeline();
+    updateStats();
+    updateProgress();
+
+    if (autoScrollEnabled) {
+        const timeline = $("timeline");
+        const active = timeline ? timeline.querySelector(".step.active") : null;
+        if (active) active.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    if (isPlaying) {
+        // reschedule to respect new position
+        scheduleNextStep();
+    }
+}
+
+function togglePlay() {
+    if (!currentTape) {
+        status("Load a tape first.", "error");
+        return;
+    }
+    if (isPlaying) stopPlayback();
+    else startPlayback();
+}
+
+function startPlayback() {
+    isPlaying = true;
+    const playBtn = $("playBtn");
+    if (playBtn) playBtn.textContent = "⏸";
+    status("Playing…", "info");
+    scheduleNextStep();
+}
+
+function stopPlayback() {
+    isPlaying = false;
+    const playBtn = $("playBtn");
+    if (playBtn) playBtn.textContent = "▶";
+    if (playbackTimer) {
+        clearTimeout(playbackTimer);
+        playbackTimer = null;
+    }
+    // Keep status if it already indicates something else
+}
+
+function scheduleNextStep() {
+    if (playbackTimer) {
+        clearTimeout(playbackTimer);
+        playbackTimer = null;
+    }
+    if (!isPlaying || !currentTape) return;
+
+    const steps = currentTape.steps;
+    if (currentStepIndex >= steps.length - 1) {
+        stopPlayback();
+        status("Playback finished.", "ok");
+        return;
+    }
+
+    const cur = steps[currentStepIndex];
+    const next = steps[currentStepIndex + 1];
+    const delta = Math.max(0.15, (Number(next.t) - Number(cur.t)) / Math.max(0.1, playbackSpeed));
+
+    playbackTimer = setTimeout(() => {
+        skipStep(1, true);
+    }, delta * 1000);
+}
+
+function skipStep(direction, fromPlayback = false) {
+    if (!currentTape) return;
+
+    const nextIndex = clamp(currentStepIndex + direction, 0, currentTape.steps.length - 1);
+    currentStepIndex = nextIndex;
+
+    renderTimeline();
+    updateStats();
+    updateProgress();
+
+    if (autoScrollEnabled) {
+        const timeline = $("timeline");
+        const active = timeline ? timeline.querySelector(".step.active") : null;
+        if (active) active.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    if (isPlaying) {
+        scheduleNextStep();
+    } else if (fromPlayback) {
+        // safety
+        stopPlayback();
+    }
+}
+
+function changeSpeed() {
+    const el = $("speedControl");
+    playbackSpeed = Number(el ? el.value : 1) || 1;
+    status(`Speed: ${playbackSpeed}x`, "info");
+    if (isPlaying) scheduleNextStep();
+}
+
+function seekProgress(event) {
+    if (!currentTape) return;
+
+    const bar = event.currentTarget;
+    const rect = bar.getBoundingClientRect();
+    const ratio = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+    const targetT = ratio * currentTape.durationSeconds;
+
+    // find nearest step by time
+    let bestIdx = 0;
+    let bestDist = Infinity;
+    for (let i = 0; i < currentTape.steps.length; i++) {
+        const dist = Math.abs((Number(currentTape.steps[i].t) || 0) - targetT);
+        if (dist < bestDist) {
+            bestDist = dist;
+            bestIdx = i;
+        }
+    }
+    jumpToStep(bestIdx);
+}
+
+function toggleRedaction() {
+    redactionEnabled = !redactionEnabled;
+    const btn = $("redactionBtn");
+    if (btn) btn.textContent = redactionEnabled ? "🫥 Redaction: ON" : "🫥 Redaction: OFF";
+    status(redactionEnabled ? "Viewing redacted (exports always redacted)." : "Viewing unredacted (exports still redacted).", redactionEnabled ? "ok" : "info");
+
+    // re-render current view
+    if (currentTape) {
+        updatePlayerHeader();
+        updateStats();
+        renderTimeline();
+    }
+}
+
+function downloadText(filename, text) {
+    const blob = new Blob([text], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function buildTapeV1ForExport() {
+    if (!currentTape) return null;
+
+    // SECURITY: Exports ALWAYS use redaction regardless of display toggle
+    // Convert normalized -> Tape v1-ish schema (simple, viewer-friendly)
+    const out = {
+        "$schema": "https://the-tape.ai/schemas/tape.schema.json",
+        "version": "1.0",
+        "metadata": {
+            "title": forceRedactString(currentTape.title),
+            "recorded_at": currentTape.recordedAt || new Date().toISOString(),
+            "duration_seconds": currentTape.durationSeconds,
+            "agent": { "name": "OpenClaw Agent", "version": currentTape.version || "unknown" },
+            "tags": [currentTape.tag],
+            "redacted": true,
+        },
+        "summary": {
+            "steps": currentTape.steps.length,
+            "tools_used": Array.from(new Set(currentTape.steps.filter(s => s.type === "action" && s.tool).map(s => forceRedactString(s.tool)))).sort(),
+            "errors": currentTape.steps.filter(s => s.type === "error").length,
+        },
+        "steps": currentTape.steps.map((s, i) => {
+            // Always redact step content for export
+            const text = forceRedactString(s.text || "");
+            const code = forceRedactString(s.code || "");
+            const tool = s.tool ? forceRedactString(s.tool) : null;
+            
+            const content = {};
+            if (s.type === "thought" || s.type === "user") content.text = text;
+            else if (s.type === "action") {
+                content.tool = tool || "tool";
+                content.description = text;
+                if (code) content.output = code;
+            } else if (s.type === "error") {
+                content.message = text;
+                content.stack_preview = code;
+            } else {
+                content.description = text;
+                if (code) content.details = code;
+            }
+
+            return {
+                "id": s.id || `step_${i + 1}`,
+                "type": s.type,
+                "timestamp": null,
+                "elapsed_seconds": Number(s.t) || 0,
+                "content": content,
+            };
+        }),
+    };
+
+    return out;
+}
+
+function publishTape() {
+    if (!currentTape) {
+        status("Nothing to publish. Load a tape first.", "error");
+        return;
+    }
+
+    // Exports always use redaction (regardless of display toggle)
+    const exportObj = buildTapeV1ForExport();
+    const jsonText = JSON.stringify(exportObj, null, 2);
+
+    const safeTitle = (currentTape.title || "tape")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 40) || "tape";
+
+    const filename = `${safeTitle}.${new Date().toISOString().slice(0, 10)}.tape.json`;
+
+    downloadText(filename, jsonText);
+    status(`Downloaded ${filename} (redacted). Review before sharing.`, "ok");
+}
+
+function utf8ToBase64(str) {
+    // Handles unicode safely
+    return btoa(unescape(encodeURIComponent(str)));
+}
+function base64ToUtf8(b64) {
+    return decodeURIComponent(escape(atob(b64)));
+}
+
+function copyShareLink() {
+    if (!currentTape) {
+        status("Load a tape first.", "error");
+        return;
+    }
+
+    // Check if running from file:// protocol
+    if (location.protocol === "file:" || location.origin === "null") {
+        status("Share links require a web server. Run: python -m http.server", "error");
+        return;
+    }
+
+    // Exports always use redaction (regardless of display toggle)
+    const exportObj = buildTapeV1ForExport();
+    const jsonText = JSON.stringify(exportObj);
+
+    const b64 = utf8ToBase64(jsonText);
+    const url = `${location.origin}${location.pathname}#tape=${encodeURIComponent(b64)}`;
+
+    if (url.length > MAX_SHARE_URL_CHARS) {
+        status(`Tape too large for link-share (${Math.round(url.length/1000)}KB). Use Publish to download instead.`, "error");
+        return;
+    }
+
+    navigator.clipboard.writeText(url).then(() => {
+        status("Share link copied (redacted, hash-embedded).", "ok");
+    }).catch(() => {
+        status("Couldn't copy automatically. Use Publish to download instead.", "error");
+    });
+}
+
+function tryLoadFromHash() {
+    const hash = (location.hash || "").trim();
+    if (!hash.startsWith("#tape=")) return false;
+    const enc = hash.slice("#tape=".length);
+    try {
+        const b64 = decodeURIComponent(enc);
+        const jsonText = base64ToUtf8(b64);
+        const obj = JSON.parse(jsonText);
+        const tape = normalizeTape(obj, "shared.tape.json");
+        loadTape(tape);
+        status("Loaded shared tape from URL.", "ok");
+        return true;
+    } catch (e) {
+        console.error(e);
+        status("Failed to load tape from URL hash.", "error");
+        return false;
+    }
+}
+
+// --- File loading ---
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const text = e.target.result;
+            const tape = parseTapeText(text, file.name);
+            loadTape(tape);
+        } catch (err) {
+            console.error(err);
+            status(String(err && err.message ? err.message : err), "error");
+        }
+    };
+    reader.readAsText(file);
+}
+
+function setupDragAndDrop() {
+    const dropZone = $("dropZone");
+    if (!dropZone) return;
+
+    dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("dragover");
+    });
+
+    dropZone.addEventListener("dragleave", () => {
+        dropZone.classList.remove("dragover");
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("dragover");
+        const file = e.dataTransfer.files[0];
+        if (!file) return;
+
+        const ext = file.name.toLowerCase();
+        if (!(ext.endsWith(".json") || ext.endsWith(".jsonl"))) {
+            status("Please drop a .tape.json or .jsonl file.", "error");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                const text = ev.target.result;
+                const tape = parseTapeText(text, file.name);
+                loadTape(tape);
+            } catch (err) {
+                console.error(err);
+                status(String(err && err.message ? err.message : err), "error");
+            }
+        };
+        reader.readAsText(file);
+    });
+}
+
+function scrollToUpload() {
+    const upload = $("upload");
+    if (upload) upload.scrollIntoView({ behavior: "smooth" });
+}
+
+function setupKeyboardShortcuts() {
+    document.addEventListener("keydown", (e) => {
+        // Don't trigger if typing in an input
+        if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+        
+        if (!currentTape) return;
+        
+        switch (e.code) {
+            case "Space":
+                e.preventDefault();
+                togglePlay();
+                break;
+            case "ArrowLeft":
+                e.preventDefault();
+                skipStep(-1);
+                break;
+            case "ArrowRight":
+                e.preventDefault();
+                skipStep(1);
+                break;
+            case "ArrowUp":
+                e.preventDefault();
+                // Jump to start
+                jumpToStep(0);
+                break;
+            case "ArrowDown":
+                e.preventDefault();
+                // Jump to end
+                jumpToStep(currentTape.steps.length - 1);
+                break;
+            case "KeyR":
+                if (!e.metaKey && !e.ctrlKey) {
+                    e.preventDefault();
+                    toggleRedaction();
+                }
+                break;
+            case "Digit1":
+            case "Digit2":
+            case "Digit3":
+            case "Digit4":
+                // Speed shortcuts: 1=0.5x, 2=1x, 3=2x, 4=4x
+                const speeds = { "Digit1": "0.5", "Digit2": "1", "Digit3": "2", "Digit4": "4" };
+                const speedSelect = $("speedControl");
+                if (speedSelect && speeds[e.code]) {
+                    speedSelect.value = speeds[e.code];
+                    changeSpeed();
+                }
+                break;
+        }
+    });
+}
+
+function init() {
+    renderFeaturedTapes();
+    setupDragAndDrop();
+    setupKeyboardShortcuts();
+
+    // Respect prefers-reduced-motion: disable auto-scroll animation heavy behavior
+    try {
+        const prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (prefersReducedMotion) autoScrollEnabled = false;
+    } catch (_) {}
+
+    // Load shared tape from URL hash if present
+    tryLoadFromHash();
+
+    status("Ready. Drop a tape to replay. [Space]=play, [←→]=skip, [R]=redact", "ok");
+}
+
+// Expose a few functions for inline onclick handlers
+window.scrollToUpload = scrollToUpload;
+window.loadDemoTape = loadDemoTape;
+window.loadFeaturedTape = loadFeaturedTape;
+window.copyShareLink = copyShareLink;
+window.publishTape = publishTape;
+window.handleFileSelect = handleFileSelect;
+window.togglePlay = togglePlay;
+window.skipStep = skipStep;
+window.seekProgress = seekProgress;
+window.changeSpeed = changeSpeed;
+window.jumpToStep = jumpToStep;
+window.toggleRedaction = toggleRedaction;
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>

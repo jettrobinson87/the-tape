@@ -1,0 +1,63 @@
+{
+  "$schema": "https://the-tape.ai/schemas/tape.schema.json",
+  "version": "1.0",
+  "metadata": {
+    "title": "Write a tiny hello world script and run it.",
+    "recorded_at": "2026-02-01T10:00:00Z",
+    "duration_seconds": 5.0,
+    "agent": {
+      "name": "OpenClaw Agent",
+      "version": "unknown"
+    },
+    "tags": [
+      "exported"
+    ]
+  },
+  "summary": {
+    "steps": 4,
+    "tools_used": [
+      "exec"
+    ],
+    "errors": 0
+  },
+  "steps": [
+    {
+      "id": "step_1",
+      "type": "user",
+      "timestamp": null,
+      "elapsed_seconds": 0.0,
+      "content": {
+        "text": "Write a tiny hello world script and run it."
+      }
+    },
+    {
+      "id": "step_2",
+      "type": "thought",
+      "timestamp": null,
+      "elapsed_seconds": 3.0,
+      "content": {
+        "text": "I'll create a small script and execute it."
+      }
+    },
+    {
+      "id": "step_3",
+      "type": "action",
+      "timestamp": null,
+      "elapsed_seconds": 3.0,
+      "content": {
+        "tool": "exec",
+        "description": "exec",
+        "output": "call:\n{\n  \"cmd\": \"python -c \\\"print('hello world')\\\"\"\n}\n\nresult:\nhello world\n"
+      }
+    },
+    {
+      "id": "step_4",
+      "type": "result",
+      "timestamp": null,
+      "elapsed_seconds": 5.0,
+      "content": {
+        "description": "Done — the script printed 'hello world'."
+      }
+    }
+  ]
+}

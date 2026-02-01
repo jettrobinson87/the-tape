@@ -1,0 +1,16 @@
+{
+  "name": "the-tape",
+  "version": "0.1.0",
+  "description": "Link to the tape or it didn't happen - A replay player for AI agent runs",
+  "private": true,
+  "openclaw": {
+    "hooks": [
+      "./hooks/tape-export"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/the-tape-dev/the-tape"
+  },
+  "license": "MIT"
+}
