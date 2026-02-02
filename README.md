@@ -18,7 +18,8 @@ python -m http.server 8000
 ## Features
 
 - **Multi-format support**: Tape v1 JSON, legacy formats, OpenClaw `.jsonl` transcripts
-- **Auto-redaction**: API keys, tokens, emails, phones, IPs, JWTs, private keys (toggleable)
+- **Auto-redaction**: API keys, tokens, emails, phones, IPs, JWTs, private keys (viewing toggle)
+- **Note:** The redaction toggle only affects what you see on-screen. **Copy Link** and **Publish** always export a redacted tape.
 - **Shareable links**: Small tapes embed in URL hash; larger tapes download as files
 - **XSS-safe**: All user content is HTML-escaped before rendering
 - **Keyboard shortcuts**: Full playback control without touching the mouse
