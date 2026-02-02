@@ -6,6 +6,8 @@ The Tape is a replay player for AI agent runs — think **Twitch/TikTok for agen
 
 Live demo: https://jettrobinson87.github.io/the-tape/ 
 
+**Feedback / requests:** Open a GitHub issue — I’m prioritizing “Hosted links” and “Cinema Mode”.
+
 ## Quick Start
 
 ```bash
