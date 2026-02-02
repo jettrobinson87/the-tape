@@ -4,6 +4,8 @@
 
 The Tape is a replay player for AI agent runs — think **Twitch/TikTok for agent execution**. Instead of "trust me bro," you share a **playable timeline** of what the agent actually did.
 
+Live demo: https://jettrobinson87.github.io/the-tape/ 
+
 ## Quick Start
 
 ```bash
